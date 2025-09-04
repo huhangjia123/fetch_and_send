@@ -113,7 +113,7 @@ def generate_market_analysis(data):
     elif oil_change < -1 and copper_change < -1:
         analysis.append("⚠️ **大宗商品走弱** - 原油和铜价下跌，可能反映需求担忧，能源和材料板块可能承压。")
     else:
-        analysis.append(f"🔸 **商品走势分化** - 原油{oil_change:.2f}%，铜{copper_change:.2f}%，反映不同商品供需面差异。")
+        analysis.append(f"🔸 **商品走势分化** - 原油{format_number(oil_change)}%，铜{format_number(copper_change)}%，反映不同商品供需面差异。")
     
     # 债券市场分析
     us_10y = data['bond_yields']['US_10Y']['value']
@@ -155,11 +155,18 @@ def generate_market_analysis(data):
     
     return "\n".join(analysis)
 
+def format_number(num):
+    """格式化数字，保留两位小数并添加正负号"""
+    return f"{num:+.2f}"
+
 def create_email_html(data, analysis):
     """
     创建HTML格式的邮件内容
     """
     today = datetime.now().strftime("%Y-%m-%d")
+    
+    # 先处理分析文本，将换行符替换为HTML换行标签
+    analysis_html = analysis.replace('\n', '<br>')
     
     html_content = f"""
     <html>
@@ -285,7 +292,7 @@ def create_email_html(data, analysis):
         <div class="analysis">
             <h2>🧠 市场分析与解读</h2>
             <div class="highlight">
-                {analysis.replace('\n', '<br>')}
+                {analysis_html}
             </div>
         </div>
     """
