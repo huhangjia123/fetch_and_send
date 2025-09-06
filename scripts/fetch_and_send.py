@@ -15,68 +15,63 @@ to_email = os.getenv('TO_EMAIL')
 
 def fetch_financial_data():
     """
-    获取全面的金融数据，按照新手投资者每日必看清单组织
+    使用AKShare获取实时金融数据
     """
     try:
-        # 这里使用模拟数据，实际应用中应从API获取真实数据
-        today = datetime.now()
+        import akshare as ak
         
-        # 按照新手投资者每日必看清单组织数据
+        # 获取上证指数实时行情
+        sh_index_df = ak.stock_zh_index_spot()
+        sh_index = sh_index_df[sh_index_df['代码'] == 'sh000001'].iloc[0]
+        
+        # 获取深证成指实时行情
+        sz_index_df = ak.stock_zh_index_spot()
+        sz_index = sz_index_df[sh_index_df['代码'] == 'sz399001'].iloc[0]
+        
+        # 获取美元兑人民币汇率
+        forex_df = ak.currency_boc_sina()
+        usd_cny = forex_df[forex_df['币种'] == '美元'].iloc[0]
+        
+        # 获取美国标普500指数（通过新浪财经）
+        sp500_df = ak.stock_us_spot()
+        sp500 = sp500_df[sp500_df['代码'] == '.INX'].iloc[0]
+        
+        # 组织数据
         data = {
-            # 1. 国内市场（核心晴雨表）
             'domestic_market': {
-                'SHANGHAI': {'value': 3204.56, 'change': -14.50, 'change_pct': -0.45},
-                'SZ_COMP': {'value': 10234.12, 'change': 12.30, 'change_pct': 0.12},
-                'CHINEXT': {'value': 2156.78, 'change': -8.90, 'change_pct': -0.41},
-                'RISING_STOCKS': 1850,  # 上涨家数
-                'FALLING_STOCKS': 1250,  # 下跌家数
-                'LIMIT_UP': 65,  # 涨停家数
-                'LIMIT_DOWN': 12  # 跌停家数
+                'SHANGHAI': {
+                    'value': float(sh_index['最新价']),
+                    'change': float(sh_index['涨跌额']),
+                    'change_pct': float(sh_index['涨跌幅'])
+                },
+                'SZ_COMP': {
+                    'value': float(sz_index['最新价']),
+                    'change': float(sz_index['涨跌额']),
+                    'change_pct': float(sz_index['涨跌幅'])
+                },
+                # 其他数据...
             },
-            
-            # 2. 资金动向（市场的发动机）
-            'capital_flows': {
-                'NORTHBOUND_NET': 45.60,  # 北向资金净流入（亿元）
-                'NORTHBOUND_SH': 28.40,   # 沪股通净流入
-                'NORTHBOUND_SZ': 17.20,   # 深股通净流入
-                'TURNOVER': 9850.00,      # 两市成交额（亿元）
-                'MARGIN_TRADING': 15200.00  # 融资融券余额（亿元）
-            },
-            
-            # 3. 全球市场（外部环境）
             'global_markets': {
-                'USD/CNY': {'value': 7.1986, 'change': -0.0023, 'change_pct': -0.03},
-                'USD_INDEX': {'value': 98.10, 'change': -0.30, 'change_pct': -0.30},
-                'S&P_500': {'value': 4550.43, 'change': 40.12, 'change_pct': 0.89},
-                'NASDAQ': {'value': 14271.42, 'change': 125.34, 'change_pct': 0.89},
-                'NIKKEI': {'value': 33168.27, 'change': -234.56, 'change_pct': -0.70},
-                'A50_INDEX': {'value': 13245.67, 'change': 87.65, 'change_pct': 0.67},
-                'VIX': {'value': 17.23, 'change': -1.20, 'change_pct': -6.51}
-            },
-            
-            # 4. 政策与情绪（市场的方向盘和催化剂）
-            'policy_sentiment': {
-                'RECENT_POLICY': "国常会部署推动经济持续回升向好的一揽子政策措施",
-                'KEY_NEWS': "人工智能产业发展迎来政策利好，多部门联合发布指导意见",
-                'SECTOR_PERFORMANCE': {
-                    'AI_CHIP': 3.45,    # 人工智能芯片板块涨幅
-                    'NEW_ENERGY': 1.23, # 新能源板块涨幅
-                    'CONSUMER': -0.56   # 消费板块涨幅
+                'USD/CNY': {
+                    'value': float(usd_cny['现汇卖出价']),
+                    'change': 0,  # 需要计算
+                    'change_pct': 0  # 需要计算
+                },
+                'S&P_500': {
+                    'value': float(sp500['最新价']),
+                    'change': float(sp500['涨跌额']),
+                    'change_pct': float(sp500['涨跌幅'])
                 }
-            },
-            
-            # 额外数据
-            'additional_data': {
-                'GOLD': {'value': 1987.50, 'change': 15.30, 'change_pct': 0.78},
-                'OIL': {'value': 85.67, 'change': -1.23, 'change_pct': -1.42},
-                'US_10Y': {'value': 4.23, 'change': 0.05, 'change_pct': 1.20},
-                'CN_10Y': {'value': 2.67, 'change': -0.02, 'change_pct': -0.74}
+                # 其他数据...
             }
+            # 其他类别数据...
         }
         
         return data
+        
     except Exception as e:
         print(f"获取金融数据时出错: {e}")
+        # 可以考虑返回None或者部分数据
         return None
 
 def generate_market_analysis(data):
@@ -498,3 +493,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
